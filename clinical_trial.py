@@ -1,3 +1,4 @@
+from datetime import datetime, timedelta
 from functools import reduce  # forward compatibility for Python 3
 import operator
 import os
@@ -57,11 +58,25 @@ def json_to_text(json_data, keys):
         return ""
 
 
-def get_all_data(API, file_name):
+def check_posted_date(posted_date):
+
+    prev_day = (datetime.today() - timedelta(days=1)).strftime("%B %d, %Y")
+    FMT = "%B %d, %Y"
+    posted_date_formatted = datetime.strptime(posted_date, FMT)
+    prev_day_formatted = datetime.strptime(prev_day, FMT)
+    # print(
+    #     f"Posted Date: {posted_date_formatted} |||| Prev Day: {prev_day_formatted}")
+    if posted_date_formatted < prev_day_formatted:
+        return False
+    else:
+        return True
+
+
+def get_all_data(API, file_name, enrollment_filter=40):
 
     for i in range(1, 100):
-        min_rank = 1+(i-1)*5
-        max_rank = i*5
+        min_rank = 1+(i-1)*100
+        max_rank = i*100
         print(min_rank, max_rank)
         params = {
             'expr': '',
@@ -78,6 +93,14 @@ def get_all_data(API, file_name):
             posted_date = json_to_text(each_study_data, [
                                        "ProtocolSection", "StatusModule", "StudyFirstPostDateStruct", "StudyFirstPostDate"])
 
+            isPostedDateGreater = check_posted_date(posted_date)
+
+            if isPostedDateGreater:
+                pass
+            else:
+                print(f"Posted date: {posted_date} is not greater!")
+                return
+
             recruitment = json_to_text(
                 each_study_data, ["ProtocolSection", "StatusModule", "OverallStatus"])
             if recruitment == "Not yet recruiting":
@@ -92,10 +115,18 @@ def get_all_data(API, file_name):
                 each_study_data, ["ProtocolSection", "IdentificationModule", "BriefTitle"])
             official_title = json_to_text(
                 each_study_data, ["ProtocolSection", "IdentificationModule", "OfficialTitle"])
-            enrollment = json_to_text(
-                each_study_data, ["ProtocolSection", "DesignModule", "EnrollmentInfo", "EnrollmentCount"])
-            contact_person_list = json_to_text(each_study_data, [
-                                               "ProtocolSection", "ContactsLocationsModule", "CentralContactList", "CentralContact"])
+            try:
+                enrollment = int(json_to_text(
+                    each_study_data, ["ProtocolSection", "DesignModule", "EnrollmentInfo", "EnrollmentCount"]))
+
+            except:
+                enrollment = 0
+
+            # FILTER ENTROLLMENT
+            if enrollment < enrollment_filter:
+                continue
+            # contact_person_list = json_to_text(each_study_data, [
+            #                                    "ProtocolSection", "ContactsLocationsModule", "CentralContactList", "CentralContact"])
 
             condition_list = json_to_text(each_study_data, [
                                           "ProtocolSection", "ConditionsModule", "ConditionList", "Condition"])
@@ -108,6 +139,8 @@ def get_all_data(API, file_name):
 
                 if location == "United States":
                     country = "United States"
+                elif location == "China" or location == "Iran" or location == "Russia":
+                    continue
                 elif location == "":
                     country = ""
                 else:
@@ -120,30 +153,53 @@ def get_all_data(API, file_name):
 
             contact_module_list = json_to_text(each_study_data, [
                                                "ProtocolSection", "ContactsLocationsModule"])
+            print("--------------------------------")
+            print(nct_id)
 
-            for each_contact_module_key, each_contact_module_value in contact_module_list.items():
+            if type(contact_module_list) == str:
+                name, phone, email = "", "", ""
+                data_list = [nct_id, url, brief_title, official_title, enrollment,
+                             agency, name, phone, email, country, conditions]
 
-                for each_contact in each_contact_module_value:
+                save_csv(file_name, data_list)
+            else:
+                for each_contact_module_key, each_contact_module_value in contact_module_list.items():
 
-                    email = json_to_text(each_contact, ["CentralContactEMail"])
-                    name = json_to_text(each_contact, ["CentralContactName"])
-                    phone = json_to_text(each_contact, ["CentralContactPhone"])
+                    for each_contact_key, each_contact_value in each_contact_module_value.items():
 
-                    data_list = [nct_id, url, brief_title, official_title, enrollment,
-                                 agency, name, phone, email, country, conditions]
+                        name, phone, email = "", "", ""
+                        for each_contact in each_contact_value:
 
-                    save_csv(file_name, data_list)
+                            for key, val in each_contact.items():
+
+                                if "name" in key.lower():
+                                    name = val
+
+                                elif "phone" in key.lower() and "phoneext" not in key.lower():
+
+                                    phone = val
+
+                                elif "mail" in key.lower():
+                                    email = val
+
+                            if email == "":
+                                continue
+                            data_list = [nct_id, url, brief_title, official_title, enrollment,
+                                         agency, name, phone, email, country, conditions]
+
+                            save_csv(file_name, data_list)
 
         print(f"Completed: {min_rank}-{max_rank}")
 
 
 def scraper():
     output_file_name = "output.csv"
+    enrollment_filter = 40
     API = "https://clinicaltrials.gov/api/query/full_studies"
 
     save_csv(output_file_name, ["nct_id", "url", "brief_title", "official_title", "enrollment",
              "agency", "full_name", "phone", "email", "country", "condition"], isFirst=True)
-    all_data = get_all_data(API, output_file_name)
+    get_all_data(API, output_file_name, enrollment_filter=enrollment_filter)
 
 
 def main():
