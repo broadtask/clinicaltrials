@@ -97,9 +97,9 @@ def check_posted_date(posted_date):
     # print(
     #     f"Posted Date: {posted_date_formatted} |||| Prev Day: {prev_day_formatted}")
     if posted_date_formatted < prev_day_formatted:
-        return False
+        return False, prev_day
     else:
-        return True
+        return True, prev_day
 
 
 def get_duplicate(name, dict_list):
@@ -239,12 +239,12 @@ def get_all_data(API, file_name, enrollment_filter=40):
             posted_date = json_to_text(each_study_data, [
                                        "ProtocolSection", "StatusModule", "StudyFirstPostDateStruct", "StudyFirstPostDate"])
 
-            isPostedDateGreater = check_posted_date(posted_date)
+            isPostedDateGreater, prev_day = check_posted_date(posted_date)
 
             if isPostedDateGreater:
                 pass
             else:
-                print(f"Posted date: {posted_date} is not greater!")
+                print(f"Finished Scraping: {prev_day}")
                 return
 
             recruitment = json_to_text(
