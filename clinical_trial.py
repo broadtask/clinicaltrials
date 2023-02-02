@@ -104,7 +104,7 @@ def get_duplicate(name, dict_list):
 
     for idx, each_dict in enumerate(dict_list):
 
-        if each_dict["name"] == name:
+        if each_dict["name_modified"] == name:
             return True, idx
     else:
         return False, ""
@@ -187,21 +187,21 @@ def get_uniq_list_of_contacts(contact_list, investor_list):
 
 def get_all_data(API, file_name, enrollment_filter=40):
 
-    range_number = 100
+    range_number = 2
 
     for i in range(1, range_number):
         min_rank = 1+(i-1)*range_number
         max_rank = i*range_number
         print(min_rank, max_rank)
-        # params = {
-        #     'expr': 'NCT05700435',
-
-        #     'fmt': 'json', }
         params = {
-            'expr': '',
-            'min_rnk': min_rank,
-            'max_rnk': max_rank,
+            'expr': 'NCT05710224',
+
             'fmt': 'json', }
+        # params = {
+        #     'expr': '',
+        #     'min_rnk': min_rank,
+        #     'max_rnk': max_rank,
+        #     'fmt': 'json', }
 
         response = requests.get(API, params=params)
 
@@ -236,14 +236,15 @@ def get_all_data(API, file_name, enrollment_filter=40):
             official_title = json_to_text(
                 each_study_data, ["ProtocolSection", "IdentificationModule", "OfficialTitle"])
             try:
-                enrollment = int(json_to_text(
+                enrollment_int = int(json_to_text(
                     each_study_data, ["ProtocolSection", "DesignModule", "EnrollmentInfo", "EnrollmentCount"]))
+                enrollment = f"{enrollment_int:,}"
 
             except:
                 enrollment = 0
 
             # FILTER ENTROLLMENT
-            if enrollment < enrollment_filter:
+            if enrollment_int < enrollment_filter:
                 continue
             # contact_person_list = json_to_text(each_study_data, [
             #                                    "ProtocolSection", "ContactsLocationsModule", "CentralContactList", "CentralContact"])
