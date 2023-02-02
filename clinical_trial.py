@@ -43,9 +43,11 @@ def save_csv(filename, data_list, isFirst=False):
             first_name = name_splitted[0]
             name_splitted.pop(0)
             last_name = " ".join(name_splitted)
-        else:
-            first_name = ""
+        elif len(name_splitted) == 1:
+            first_name = name_splitted[0]
             last_name = ""
+        else:
+            return
 
         data_set = [data_list[0], data_list[1], data_list[2], data_list[3], data_list[4],
                     data_list[5], first_name, last_name, data_list[7], data_list[8], other_name, data_list[10], data_list[11]]
@@ -115,21 +117,44 @@ def remove_duplicate_from_contact_list(investor_list, contact_list):
     uniq_contact_list = []
     investor_list_new = investor_list.copy()
 
-    for idx_inv, each_investor in enumerate(investor_list):
+    for idx_cont, each_contact in enumerate(contact_list):
+        contact_name_original = each_contact["CentralContactName"]
+        contact_name = name_modifier(contact_name_original)
+        check = False
 
-        investor_name_original = each_investor["OverallOfficialName"]
-        investor_name = investor_name_original.lower().split(",")[0].strip()
+        for idx_inv, each_investor in enumerate(investor_list):
 
-        for each_contact in contact_list:
-            contact_name_original = each_contact["CentralContactName"]
-            contact_name = contact_name_original.lower().split(",")[0].strip()
+            investor_name_original = each_investor["OverallOfficialName"]
+            investor_name = name_modifier(investor_name_original)
 
-            if contact_name == investor_name:
-                investor_list[idx_inv] = each_investor
+            if investor_name == contact_name:
 
+                investor_list_new[idx_inv]["OverallOfficialName"] = each_contact["CentralContactName"]
+
+                try:
+                    investor_list_new[idx_inv]["OverallOfficialEMail"] = each_contact["CentralContactEMail"]
+                except:
+                    investor_list_new[idx_inv]["OverallOfficialEMail"] = ""
+
+                try:
+                    investor_list_new[idx_inv]["OverallOfficialPhone"] = each_contact["CentralContactPhone"]
+                except:
+                    investor_list_new[idx_inv]["OverallOfficialPhone"] = ""
+                check = True
                 break
+        if check == False:
+            uniq_contact_list.append(each_contact)
 
     return uniq_contact_list, investor_list_new
+
+
+def name_modifier(name):
+    name = name.lower().split(",")[0].strip()
+    name_splitted = name.split(" ")
+    name_splitted = [s.strip() for s in name_splitted if len(
+        s.strip().replace(".", "")) > 1]
+    name = " ".join(name_splitted)
+    return name
 
 
 def get_uniq_list_of_contacts(contact_list, investor_list):
@@ -139,7 +164,8 @@ def get_uniq_list_of_contacts(contact_list, investor_list):
 
     for each_contact in contact_list:
         contact_name_original = each_contact["CentralContactName"]
-        contact_name = contact_name_original.lower().split(",")[0].strip()
+        contact_name = name_modifier(contact_name_original)
+
         isDuplicate, dup_idx = get_duplicate(contact_name, main_dict)
 
         if isDuplicate:
@@ -159,7 +185,7 @@ def get_uniq_list_of_contacts(contact_list, investor_list):
 
     for each_investor in investor_list:
         investor_name_original = each_investor["OverallOfficialName"]
-        investor_name = investor_name_original.lower().split(",")[0].strip()
+        investor_name = name_modifier(investor_name_original)
 
         isDuplicate, dup_idx = get_duplicate(investor_name, main_dict)
 
@@ -287,10 +313,10 @@ def get_all_data(API, file_name, enrollment_filter=40):
 
             if type(contact_module_list) == str:
                 name, phone, email, other_contact = "", "", "", ""
-                data_list = [nct_id, url, brief_title, official_title, enrollment,
-                             agency, name, phone, email, other_contact, country, conditions]
+                # data_list = [nct_id, url, brief_title, official_title, enrollment,
+                #              agency, name, phone, email, other_contact, country, conditions]
 
-                save_csv(file_name, data_list)
+                # save_csv(file_name, data_list)
             else:
 
                 # NEED TO CHANGE HERE
@@ -414,8 +440,8 @@ def get_all_data(API, file_name, enrollment_filter=40):
                         except:
                             second_investor_name = ""
 
-                        new_contact_list, new_investor_list = get_uniq_list_of_contacts(
-                            contact_list, investor_list)
+                        new_contact_list, new_investor_list = remove_duplicate_from_contact_list(
+                            investor_list, contact_list)
 
                         for each_contact in new_contact_list:
                             contact_name = json_to_text(
