@@ -187,21 +187,21 @@ def get_uniq_list_of_contacts(contact_list, investor_list):
 
 def get_all_data(API, file_name, enrollment_filter=40):
 
-    range_number = 2
+    range_number = 100
 
     for i in range(1, range_number):
         min_rank = 1+(i-1)*range_number
         max_rank = i*range_number
         print(min_rank, max_rank)
-        params = {
-            'expr': 'NCT05710224',
-
-            'fmt': 'json', }
         # params = {
-        #     'expr': '',
-        #     'min_rnk': min_rank,
-        #     'max_rnk': max_rank,
+        #     'expr': 'NCT05710224',
+
         #     'fmt': 'json', }
+        params = {
+            'expr': '',
+            'min_rnk': min_rank,
+            'max_rnk': max_rank,
+            'fmt': 'json', }
 
         response = requests.get(API, params=params)
 
@@ -351,8 +351,11 @@ def get_all_data(API, file_name, enrollment_filter=40):
                             contact_phone = json_to_text(
                                 each_contact, ["CentralContactPhone"])
                             if contact_idx == 0:
-                                other_contact = json_to_text(
-                                    contact_list[contact_idx+1], ["CentralContactName"])
+                                try:
+                                    other_contact = json_to_text(
+                                        contact_list[contact_idx+1], ["CentralContactName"])
+                                except:
+                                    other_contact = ""
                             else:
                                 other_contact = json_to_text(
                                     contact_list[0], ["CentralContactName"])
