@@ -6,6 +6,7 @@ import requests
 from lxml import html
 import csv
 import json
+from mail import send_email
 
 
 def read_scrapped_data(previous_data_file):
@@ -511,11 +512,17 @@ def get_all_data(API, file_name, enrollment_filter=40):
 def scraper():
     output_file_name = f"{datetime.today().strftime('%Y-%m-%d')}-clinicaltrials-gov.csv"
     enrollment_filter = 40
+    reciever_email = "me.artu07@gmail.com"
+    sender_email = "me.artu0@gmail.com"
+    password = "password"
+
     API = "https://clinicaltrials.gov/api/query/full_studies"
 
     save_csv(output_file_name, ["nct_id", "url", "brief_title", "official_title", "enrollment",
              "agency", "f_name", "l_name", "phone", "email", "Other Study Contact", "country", "condition"], isFirst=True)
     get_all_data(API, output_file_name, enrollment_filter=enrollment_filter)
+
+    send_email(output_file_name, reciever_email, sender_email, password)
 
 
 def main():
