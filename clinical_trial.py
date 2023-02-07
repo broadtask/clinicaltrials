@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from functools import reduce  # forward compatibility for Python 3
 import operator
 import os
@@ -50,8 +50,17 @@ def save_csv(filename, data_list, isFirst=False):
         else:
             return
 
+        other_name_splitted = other_name.split(" ")
+        other_name_splitted = [s.strip()
+                               for s in other_name_splitted if s.strip() != ""]
+        other_name_splitted = [s for s in other_name_splitted if len(s) > 1]
+
+        other_name = " ".join(other_name_splitted).title()
+        phone = data_list[7].replace("+", "")
+        email = data_list[8].lower()
+
         data_set = [data_list[0], data_list[1], data_list[2], data_list[3], data_list[4],
-                    data_list[5], first_name, last_name, data_list[7], data_list[8], other_name, data_list[10], data_list[11]]
+                    data_list[5], first_name.title(), last_name.title(), phone, email, other_name, data_list[10], data_list[11]]
 
     with open(f'{filename}', "a", newline='', encoding='utf-8-sig') as fp:
         wr = csv.writer(fp, dialect='excel')
@@ -90,13 +99,12 @@ def json_to_text(json_data, keys):
 
 
 def check_posted_date(posted_date):
-
-    prev_day = (datetime.today() - timedelta(days=1)).strftime("%B %d, %Y")
+    time_zone_fixed = 6
+    prev_day = ((datetime.now(timezone.utc) + timedelta(hours=time_zone_fixed)) -
+                timedelta(days=1)).strftime("%B %d, %Y")
     FMT = "%B %d, %Y"
     posted_date_formatted = datetime.strptime(posted_date, FMT)
     prev_day_formatted = datetime.strptime(prev_day, FMT)
-    # print(
-    #     f"Posted Date: {posted_date_formatted} |||| Prev Day: {prev_day_formatted}")
     if posted_date_formatted < prev_day_formatted:
         return False, prev_day
     else:
@@ -330,8 +338,17 @@ def get_all_data(API, file_name, enrollment_filter=40):
                             each_contact, ["CentralContactName"])
                         contact_email = json_to_text(
                             each_contact, ["CentralContactEMail"])
-                        contact_phone = json_to_text(
+                        contact_phone_without_ext = json_to_text(
                             each_contact, ["CentralContactPhone"])
+                        contact_phone_ext = json_to_text(
+                            each_contact, ["CentralContactPhoneExt"])
+
+                        if contact_phone_ext.strip() != "":
+                            contact_phone = contact_phone_without_ext + \
+                                f" ext {contact_phone_ext}"
+                        else:
+                            contact_phone = contact_phone_without_ext
+
                         other_contact = ""
 
                         data_list = [nct_id, url, brief_title, official_title, enrollment,
@@ -348,8 +365,17 @@ def get_all_data(API, file_name, enrollment_filter=40):
                             each_contact, ["CentralContactName"])
                         contact_email = json_to_text(
                             each_contact, ["CentralContactEMail"])
-                        contact_phone = json_to_text(
+                        contact_phone_without_ext = json_to_text(
                             each_contact, ["CentralContactPhone"])
+                        contact_phone_ext = json_to_text(
+                            each_contact, ["CentralContactPhoneExt"])
+
+                        if contact_phone_ext.strip() != "":
+                            contact_phone = contact_phone_without_ext + \
+                                f" ext {contact_phone_ext}"
+                        else:
+                            contact_phone = contact_phone_without_ext
+
                         if contact_idx == 0:
                             other_contact = json_to_text(
                                 contact_list[contact_idx+1], ["CentralContactName"])
@@ -375,8 +401,17 @@ def get_all_data(API, file_name, enrollment_filter=40):
                                 each_contact, ["CentralContactName"])
                             contact_email = json_to_text(
                                 each_contact, ["CentralContactEMail"])
-                            contact_phone = json_to_text(
+                            contact_phone_without_ext = json_to_text(
                                 each_contact, ["CentralContactPhone"])
+                            contact_phone_ext = json_to_text(
+                                each_contact, ["CentralContactPhoneExt"])
+
+                            if contact_phone_ext.strip() != "":
+                                contact_phone = contact_phone_without_ext + \
+                                    f" ext {contact_phone_ext}"
+                            else:
+                                contact_phone = contact_phone_without_ext
+
                             if contact_idx == 0:
                                 try:
                                     other_contact = json_to_text(
@@ -401,8 +436,17 @@ def get_all_data(API, file_name, enrollment_filter=40):
                                 each_contact, ["CentralContactName"])
                             contact_email = json_to_text(
                                 each_contact, ["CentralContactEMail"])
-                            contact_phone = json_to_text(
+                            contact_phone_without_ext = json_to_text(
                                 each_contact, ["CentralContactPhone"])
+                            contact_phone_ext = json_to_text(
+                                each_contact, ["CentralContactPhoneExt"])
+
+                            if contact_phone_ext.strip() != "":
+                                contact_phone = contact_phone_without_ext + \
+                                    f" ext {contact_phone_ext}"
+                            else:
+                                contact_phone = contact_phone_without_ext
+
                             other_contact = first_investor_name
                             data_list = [nct_id, url, brief_title, official_title, enrollment,
                                          agency, contact_name, contact_phone, contact_email, other_contact, country, conditions]
@@ -449,8 +493,17 @@ def get_all_data(API, file_name, enrollment_filter=40):
                                 each_contact, ["CentralContactName"])
                             contact_email = json_to_text(
                                 each_contact, ["CentralContactEMail"])
-                            contact_phone = json_to_text(
+                            contact_phone_without_ext = json_to_text(
                                 each_contact, ["CentralContactPhone"])
+                            contact_phone_ext = json_to_text(
+                                each_contact, ["CentralContactPhoneExt"])
+
+                            if contact_phone_ext.strip() != "":
+                                contact_phone = contact_phone_without_ext + \
+                                    f" ext {contact_phone_ext}"
+                            else:
+                                contact_phone = contact_phone_without_ext
+
                             other_contact = first_investor_name
 
                             data_list = [nct_id, url, brief_title, official_title, enrollment,
@@ -512,14 +565,14 @@ def get_all_data(API, file_name, enrollment_filter=40):
 def scraper():
     output_file_name = f"{datetime.today().strftime('%Y-%m-%d')}-clinicaltrials-gov.csv"
     enrollment_filter = 40
-    reciever_email = "me.artu07@gmail.com"
-    sender_email = "me.artu0@gmail.com"
-    password = "password"
+    reciever_email = "alia6783@gmail.com"
+    sender_email = "broadbreada@gmail.com"
+    password = "scxmzgfifsurfkgk"
 
     API = "https://clinicaltrials.gov/api/query/full_studies"
 
     save_csv(output_file_name, ["nct_id", "url", "brief_title", "official_title", "enrollment",
-             "agency", "f_name", "l_name", "phone", "email", "Other Study Contact", "country", "condition"], isFirst=True)
+             "sponsor", "f_name", "l_name", "phone", "email", "Other Study Contact", "country", "condition"], isFirst=True)
     get_all_data(API, output_file_name, enrollment_filter=enrollment_filter)
 
     send_email(output_file_name, reciever_email, sender_email, password)
