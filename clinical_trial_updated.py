@@ -188,13 +188,15 @@ def check_posted_date(posted_date):
     time_zone_fixed = 8
     todays_date = (datetime.now(timezone.utc) -
                    timedelta(hours=time_zone_fixed))
+    todays_date_string = todays_date.strftime("%B %d, %Y")
     prev_day = (todays_date -
                 timedelta(days=1)).strftime("%B %d, %Y")
     FMT = "%B %d, %Y"
     posted_date_formatted = datetime.strptime(posted_date, FMT)
-    # today_date_formatted = datetime.strptime(todays_date, FMT)
+    today_date_formatted = datetime.strptime(todays_date_string, FMT)
+
     prev_day_formatted = datetime.strptime(prev_day, FMT)
-    if posted_date_formatted == todays_date:
+    if posted_date_formatted == today_date_formatted:
         return "same_day", prev_day
     elif posted_date_formatted < prev_day_formatted:
         return False, prev_day
@@ -342,7 +344,7 @@ def get_all_data(API, file_name, enrollment_filter=40):
             isPostedDateGreater, prev_day = check_posted_date(posted_date)
 
             if isPostedDateGreater == "same_day":
-                print("same_day")
+
                 continue
             elif isPostedDateGreater == True:
                 pass
