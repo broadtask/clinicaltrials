@@ -185,8 +185,8 @@ def json_to_text(json_data, keys):
 
 
 def check_posted_date(posted_date):
-    time_zone_fixed = 6
-    todays_date = (datetime.now(timezone.utc) +
+    time_zone_fixed = 8
+    todays_date = (datetime.now(timezone.utc) -
                    timedelta(hours=time_zone_fixed))
     prev_day = (todays_date -
                 timedelta(days=1)).strftime("%B %d, %Y")
@@ -650,7 +650,7 @@ def scraper():
              "sponsor", "f_name", "l_name", "phone", "email", "Other Study Contact", "country", "condition"], isFirst=True)
     get_all_data(API, output_file_name, enrollment_filter=enrollment_filter)
 
-    # send_email(output_file_name, reciever_email, sender_email, password)
+    send_email(output_file_name, reciever_email, sender_email, password)
 
 
 def main():
