@@ -99,7 +99,7 @@ def json_to_text(json_data, keys):
 
 
 def check_posted_date(posted_date):
-    time_zone_fixed = 6
+    time_zone_fixed = -8
     prev_day = ((datetime.now(timezone.utc) + timedelta(hours=time_zone_fixed)) -
                 timedelta(days=1)).strftime("%B %d, %Y")
     FMT = "%B %d, %Y"
