@@ -185,7 +185,7 @@ def json_to_text(json_data, keys):
 
 
 def check_posted_date(posted_date):
-    time_zone_fixed = 8
+    time_zone_fixed = -8
     todays_date = (datetime.now(timezone.utc) -
                    timedelta(hours=time_zone_fixed))
     todays_date_string = todays_date.strftime("%B %d, %Y")
@@ -640,7 +640,7 @@ def get_all_data(API, file_name, enrollment_filter=40):
 
 
 def scraper():
-    output_file_name = f"{datetime.today().strftime('%Y-%m-%d')}-clinicaltrials-gov.csv"
+    output_file_name = f"{((datetime.now(timezone.utc) - timedelta(hours=-8)) - timedelta(days=1)).strftime('%Y-%m-%d')}-clinicaltrials-gov.csv"
     enrollment_filter = 40
     reciever_email = "alia6783@gmail.com"
     sender_email = "broadbreada@gmail.com"
