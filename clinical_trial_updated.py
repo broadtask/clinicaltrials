@@ -98,7 +98,7 @@ def save_csv(filename, data_list, isFirst=False):
         except:
             name = ""
         try:
-            other_name = data_list[9].strip().split(",")[0]
+            other_name = data_list[10].strip().split(",")[0]
             other_name = remove_middle_initials_from_name(other_name)
             if other_name == "bypass":
                 return
@@ -194,8 +194,8 @@ def check_posted_date(posted_date):
     FMT = "%B %d, %Y"
     posted_date_formatted = datetime.strptime(posted_date, FMT)
     today_date_formatted = datetime.strptime(todays_date_string, FMT)
-
     prev_day_formatted = datetime.strptime(prev_day, FMT)
+
     if posted_date_formatted == today_date_formatted:
         return "same_day", prev_day
     elif posted_date_formatted < prev_day_formatted:
@@ -320,9 +320,9 @@ def get_all_data(API, file_name, enrollment_filter=40):
     for i in range(1, range_number):
         min_rank = 1+(i-1)*range_number
         max_rank = i*range_number
-        # print(min_rank, max_rank)
+        print(min_rank, max_rank)
         # params = {
-        #     'expr': 'NCT05710211',
+        #     'expr': 'NCT05709548',
 
         #     'fmt': 'json', }
         params = {
@@ -577,10 +577,9 @@ def get_all_data(API, file_name, enrollment_filter=40):
 
                     # IF PARTIAL DUPLICATES FOUND
                     elif duplicate_status == "partial":
+
                         first_investor_name = json_to_text(
                             investor_list[0], ["OverallOfficialName"])
-                        # print("-------------")
-                        # print(investor_list)
 
                         try:
                             second_investor_name = json_to_text(
@@ -620,6 +619,7 @@ def get_all_data(API, file_name, enrollment_filter=40):
 
                             investor_name = json_to_text(
                                 each_investor, ["OverallOfficialName"])
+
                             investor_email = json_to_text(
                                 each_investor, ["OverallOfficialEMail"])
                             investor_phone = json_to_text(
@@ -628,10 +628,13 @@ def get_all_data(API, file_name, enrollment_filter=40):
                                 if second_investor_name == "":
 
                                     other_contact = json_to_text(
-                                        new_investor_list[0], ["CentralContactName"])
+                                        new_contact_list[0], ["CentralContactName"])
                                 else:
                                     other_contact = second_investor_name
-                            data_list = [nct_id, url, posted_date, posted_date, brief_title, official_title, enrollment,
+                            else:
+                                other_contact = first_investor_name
+
+                            data_list = [nct_id, url, posted_date, brief_title, official_title, enrollment,
                                          agency, investor_name, investor_phone, investor_email, other_contact, country, conditions]
 
                             save_csv(file_name, data_list)
