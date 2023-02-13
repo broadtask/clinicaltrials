@@ -643,7 +643,7 @@ def get_all_data(API, file_name, enrollment_filter=40):
 
 
 def scraper():
-    output_file_name = f"{((datetime.now(timezone.utc) - timedelta(hours=-8, days=1)).strftime('%Y-%m-%d')}-clinicaltrials-gov.csv"
+    output_file_name = f"{(datetime.now(timezone.utc) - timedelta(hours=-8, days=1)).strftime('%Y-%m-%d')}-clinicaltrials-gov.csv"
     enrollment_filter = 40
     reciever_email = "alia6783@gmail.com"
     sender_email = "broadbreada@gmail.com"
