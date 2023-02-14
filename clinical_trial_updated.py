@@ -29,7 +29,76 @@ def read_competitors():
     return domains
 
 
+def get_all_domains():
+    url = "https://en.wikipedia.org/wiki/Country_code_top-level_domain"
+
+    webpage, response = send_requests(url)
+    all_domain_elems = webpage.xpath(
+        "//div[@class = 'mw-parser-output']/table[@class = 'wikitable mw-collapsible sortable'][1]/tbody/tr[not (@style)]")
+    for each_domain_elem in all_domain_elems:
+
+        domain_name = each_domain_elem.xpath("td[1]//text()")
+        print(domain_name)
+
+
+def xpath_to_text(webpage, xpath):
+    """Conver elemnt to text"""
+
+    try:
+        return webpage.xpath(xpath)[0].strip()
+    except:
+        return ""
+
+
+def send_requests(url, headers="", cookies="", params=""):
+    """Request sending Function"""
+
+    response = requests.get(url, headers=headers,
+                            cookies=cookies, params=params)
+    webpage = html.fromstring(response.content)
+    return webpage, response
+
+
+def get_all_domains():
+    url = "https://en.wikipedia.org/wiki/Country_code_top-level_domain"
+
+    webpage, response = send_requests(url)
+    all_domain_elems = webpage.xpath(
+        "//div[@class = 'mw-parser-output']/table[@class = 'wikitable mw-collapsible sortable'][1]/tbody/tr[not (@style)]")
+    all_domain_data = []
+    for each_domain_elem in all_domain_elems:
+
+        domain_name = xpath_to_text(each_domain_elem, "td[1]//text()")
+        country_name = xpath_to_text(each_domain_elem, "td[2]/a/text()")
+
+        all_domain_data.append({
+            "domain": domain_name,
+            "country": country_name
+        })
+    return all_domain_data
+
+
 ALL_COMPLETITORS = read_competitors()
+ALL_DOMAINS = get_all_domains()
+
+
+def check_domain(email):
+
+    domain_name = email.split("@")[-1].split(".")[-1].strip()
+
+    for each_domain in ALL_DOMAINS:
+
+        if each_domain["domain"].replace(".", "").lower().strip() == domain_name:
+
+            country_name = each_domain["country"]
+            if "united" in country_name.lower().strip() and "states" in country_name.lower().strip():
+                country_data = "United States"
+
+            else:
+                country_data = "Not United States"
+            return country_data
+    else:
+        return "Not Matched"
 
 
 def read_scrapped_data(previous_data_file):
@@ -145,30 +214,23 @@ def save_csv(filename, data_list, isFirst=False):
         if first_name.lower() in sponsor_name.lower() and last_name.lower() in sponsor_name.lower():
             return
 
+        check_domain_name = check_domain(email)
+        country = data_list[11]
+        if check_domain_name == "United States":
+            country = "United States"
+
+        elif check_domain_name == "Not United States":
+            country = "Not United States"
+
+        else:
+            pass
+
         data_set = [data_list[0], data_list[1], data_list[2], data_list[3], data_list[4], data_list[5],
-                    data_list[6], first_name.title(), last_name.title(), phone, email, other_name, data_list[11], data_list[12]]
+                    data_list[6], first_name.title(), last_name.title(), phone, email, other_name, country, data_list[12]]
 
     with open(f'{filename}', "a", newline='', encoding='utf-8-sig') as fp:
         wr = csv.writer(fp, dialect='excel')
         wr.writerow(data_set)
-
-
-def xpath_to_text(webpage, xpath):
-    """Conver elemnt to text"""
-
-    try:
-        return webpage.xpath(xpath)[0].strip()
-    except:
-        return ""
-
-
-def send_requests(url, headers="", cookies="", params=""):
-    """Request sending Function"""
-
-    response = requests.get(url, headers=headers,
-                            cookies=cookies, params=params)
-    webpage = html.fromstring(response.content)
-    return webpage, response
 
 
 def getFromDict(dataDict, mapList):
@@ -185,6 +247,7 @@ def json_to_text(json_data, keys):
 
 
 def check_posted_date(posted_date):
+
     time_zone_fixed = 8
     todays_date = (datetime.now(timezone.utc) -
                    timedelta(hours=time_zone_fixed))
@@ -195,6 +258,10 @@ def check_posted_date(posted_date):
     posted_date_formatted = datetime.strptime(posted_date, FMT)
     today_date_formatted = datetime.strptime(todays_date_string, FMT)
     prev_day_formatted = datetime.strptime(prev_day, FMT)
+
+    # print(f"Poseted Date: {posted_date_formatted}")
+    # print(f"Todays Date: {today_date_formatted}")
+    # print(f"Previous Day: {prev_day_formatted}")
 
     if posted_date_formatted == today_date_formatted:
         return "same_day", prev_day
