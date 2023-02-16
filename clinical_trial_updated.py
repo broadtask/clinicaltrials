@@ -693,9 +693,11 @@ def get_all_data(API, file_name, enrollment_filter=40):
                                 each_investor, ["OverallOfficialPhone"])
                             if idx_inv == 0:
                                 if second_investor_name == "":
-
-                                    other_contact = json_to_text(
-                                        new_contact_list[0], ["CentralContactName"])
+                                    try:
+                                        other_contact = json_to_text(
+                                            new_contact_list[0], ["CentralContactName"])
+                                    except: 
+                                        other_contact = ""
                                 else:
                                     other_contact = second_investor_name
                             else:
