@@ -198,9 +198,15 @@ def save_csv(filename, data_list, isFirst=False):
         email = data_list[9]
 
         if any(competitor in email for competitor in ALL_COMPLETITORS):
-            return
+
+            email = "inCompetitors"
         else:
             email = email.lower()
+
+        if email == "" or email == "inCompetitors":
+            return
+        else:
+            pass
 
         full_name = f"{first_name} {last_name}"
 
@@ -696,7 +702,7 @@ def get_all_data(API, file_name, enrollment_filter=40):
                                     try:
                                         other_contact = json_to_text(
                                             new_contact_list[0], ["CentralContactName"])
-                                    except: 
+                                    except:
                                         other_contact = ""
                                 else:
                                     other_contact = second_investor_name
