@@ -203,7 +203,7 @@ def save_csv(filename, data_list, isFirst=False):
         else:
             email = email.lower()
 
-        if email == "" or email == "inCompetitors":
+        if email == "inCompetitors":
             return
         else:
             pass
