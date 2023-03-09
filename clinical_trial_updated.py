@@ -107,8 +107,44 @@ def read_scrapped_data(previous_data_file):
 
 
 def check_listed_word_in_name(name):
-    listed_words = ["call", "center", "recruitment", "office", "clinical",
-                    "trials", "trial", "study", "studies", "toll", "free", "number"]
+    listed_words = ["call",
+        "center",
+        "recruitment",
+        "office",
+        "clinical",
+        "trials",
+        "trial",
+        "study",
+        "studies",
+        "toll",
+        "free",
+        "number",
+        "Central",
+        "Contact",
+        "Therapeutics",
+        "Research",
+        "Development",
+        "Surgical",
+        "Vision",
+        "Pharmaceuticals",
+        "Pharma",
+        "Medical",
+        "Director",
+        "Information",
+        "Info",
+        "Boehringer",
+        "Transparency",
+        "Department",
+        "Dpt.",
+        "Dept.",
+        "Affairs",
+        "Xenon",
+        "Gilead",
+        "Novo",
+        "The",
+        "Diagnostic",
+        "Radiology",
+        "Novartis"]
     if any(word in name.strip().lower() for word in listed_words):
 
         return True
