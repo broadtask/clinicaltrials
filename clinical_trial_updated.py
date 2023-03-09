@@ -10,6 +10,7 @@ import csv
 import json
 from mail import send_email
 import pandas as pd
+from clinical_trial_post_process import post_process
 
 Name_Data = ""
 
@@ -108,43 +109,43 @@ def read_scrapped_data(previous_data_file):
 
 def check_listed_word_in_name(name):
     listed_words = ["call",
-        "center",
-        "recruitment",
-        "office",
-        "clinical",
-        "trials",
-        "trial",
-        "study",
-        "studies",
-        "toll",
-        "free",
-        "number",
-        "Central",
-        "Contact",
-        "Therapeutics",
-        "Research",
-        "Development",
-        "Surgical",
-        "Vision",
-        "Pharmaceuticals",
-        "Pharma",
-        "Medical",
-        "Director",
-        "Information",
-        "Info",
-        "Boehringer",
-        "Transparency",
-        "Department",
-        "Dpt.",
-        "Dept.",
-        "Affairs",
-        "Xenon",
-        "Gilead",
-        "Novo",
-        "The",
-        "Diagnostic",
-        "Radiology",
-        "Novartis"]
+                    "center",
+                    "recruitment",
+                    "office",
+                    "clinical",
+                    "trials",
+                    "trial",
+                    "study",
+                    "studies",
+                    "toll",
+                    "free",
+                    "number",
+                    "Central",
+                    "Contact",
+                    "Therapeutics",
+                    "Research",
+                    "Development",
+                    "Surgical",
+                    "Vision",
+                    "Pharmaceuticals",
+                    "Pharma",
+                    "Medical",
+                    "Director",
+                    "Information",
+                    "Info",
+                    "Boehringer",
+                    "Transparency",
+                    "Department",
+                    "Dpt.",
+                    "Dept.",
+                    "Affairs",
+                    "Xenon",
+                    "Gilead",
+                    "Novo",
+                    "The",
+                    "Diagnostic",
+                    "Radiology",
+                    "Novartis"]
     if any(word in name.strip().lower() for word in listed_words):
 
         return True
@@ -754,7 +755,7 @@ def get_all_data(API, file_name, enrollment_filter=40):
 
 
 def scraper():
-    output_file_name = f"{(datetime.now(timezone.utc) - timedelta(hours=8, days=1)).strftime('%Y-%m-%d')}-clinicaltrials-gov.csv"
+    output_file_name = f"{(datetime.now(timezone.utc) - timedelta(hours=8, days=1)).strftime('%Y-%m-%d')}-clinicaltrials-gov_temp.csv"
     enrollment_filter = 40
     reciever_email = "alia6783@gmail.com"
     sender_email = "broadbreada@gmail.com"
@@ -766,7 +767,9 @@ def scraper():
              "sponsor", "f_name", "l_name", "phone", "email", "Other Study Contact", "country", "condition"], isFirst=True)
     get_all_data(API, output_file_name, enrollment_filter=enrollment_filter)
 
-    send_email(output_file_name, reciever_email, sender_email, password)
+    post_process(output_file_name)
+
+    # send_email(output_file_name, reciever_email, sender_email, password)
 
 
 def main():
