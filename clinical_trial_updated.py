@@ -11,8 +11,10 @@ import json
 from mail import send_email
 import pandas as pd
 from clinical_trial_post_process import post_process
+from clinical_trial_email_database import update_email_database
 
 Name_Data = ""
+EACH_STUDY = ""
 
 
 def read_competitors():
@@ -92,12 +94,13 @@ def check_domain(email):
         if each_domain["domain"].replace(".", "").lower().strip() == domain_name:
 
             country_name = each_domain["country"]
-            if "united" in country_name.lower().strip() and "states" in country_name.lower().strip():
-                country_data = "United States"
 
-            else:
-                country_data = "Not United States"
-            return country_data
+            # if "united" in country_name.lower().strip() and "states" in country_name.lower().strip():
+            #     country_data = "United States"
+
+            # else:
+            #     country_data = "Not United States"
+            return country_name
     else:
         return "Not Matched"
 
@@ -258,18 +261,26 @@ def save_csv(filename, data_list, isFirst=False):
             return
 
         check_domain_name = check_domain(email)
-        country = data_list[11]
-        if check_domain_name == "United States":
-            country = "United States"
 
-        elif check_domain_name == "Not United States":
-            country = "Not United States"
+        if check_domain_name == "Not Matched":
 
+            country = data_list[11]
         else:
-            pass
+            country = check_domain_name
+
+        # if check_domain_name == "United States":
+        #     country = "United States"
+
+        # elif check_domain_name == "Not United States":
+        #     country = "Not United States"
+
+        # else:
+        #     pass
+
+        category = get_category_data(EACH_STUDY, data_list[5], country)
 
         data_set = [data_list[0], data_list[1], data_list[2], data_list[3], data_list[4], data_list[5],
-                    data_list[6], first_name.title(), last_name.title(), phone, email, other_name, country, data_list[12]]
+                    data_list[6], first_name.title(), last_name.title(), phone, email, other_name, country, category, data_list[12]]
 
     with open(f'{filename}', "a", newline='', encoding='utf-8-sig') as fp:
         wr = csv.writer(fp, dialect='excel')
@@ -423,6 +434,34 @@ def get_uniq_list_of_contacts(contact_list, investor_list):
     return main_dict, duplicate_status
 
 
+def get_category_data(each_study, enrollment_data, country):
+
+    try:
+        enrollment = int(enrollment_data)
+    except:
+        enrollment = 999999
+
+    study_text = f"{each_study}".lower()
+
+    if "diabetes" in study_text or "diabetic" in study_text or "prediabetes" in study_text or "prediabetic" in study_text:
+        category = "Diabetes"
+    elif "dementia" in study_text or "cognitive impairment" in study_text or "cognitive decline" in study_text or "cognitive dysfunction" in study_text or "neurocognitive dysfunction" in study_text or "cognitive deficits" in study_text:
+        category = "Dementia"
+    elif "cbt" in study_text or "cognitive behavioral" in study_text or "cognitive behavior" in study_text:
+        category = "CBT"
+    elif "mhealth" in study_text or "mobile health" in study_text:
+        category = "mHealth"
+    elif "digital health" in study_text or "digital healthcare" in study_text or "digital therapy" in study_text:
+        category = "Digital Health"
+    elif enrollment <= 100:
+        category = "<100P"
+    elif country.lower() == "united states" or country.lower() == "us" or country.lower() == "usa":
+        category = "USA"
+    else:
+        category = "Not USA"
+    return category
+
+
 def get_all_data(API, file_name, enrollment_filter=40):
 
     range_number = 100
@@ -446,6 +485,11 @@ def get_all_data(API, file_name, enrollment_filter=40):
         all_study_data = response.json()["FullStudiesResponse"]["FullStudies"]
 
         for each_study in all_study_data:
+
+            global EACH_STUDY
+
+            EACH_STUDY = each_study
+
             each_study_data = json_to_text(each_study, ["Study"])
 
             posted_date = json_to_text(each_study_data, [
@@ -507,14 +551,14 @@ def get_all_data(API, file_name, enrollment_filter=40):
             if location_list != "":
                 location = location_list[0]["LocationCountry"]
 
-                if location == "United States":
-                    country = "United States"
-                elif location == "China" or location == "Iran" or location == "Russia":
+                # if location == "United States":
+                #     country = "United States"
+                if location == "China" or location == "Iran" or location == "Russia":
                     continue
                 elif location == "":
                     country = ""
                 else:
-                    country = "Not United States"
+                    country = location
             else:
                 country = ""
 
@@ -761,15 +805,20 @@ def scraper():
     sender_email = "broadbreada@gmail.com"
     password = "scxmzgfifsurfkgk"
 
+    email_validation_api_key = "test_ec6969802851c6fefad8"
+
     API = "https://clinicaltrials.gov/api/query/full_studies"
 
     save_csv(output_file_name, ["nct_id", "url", "posted date", "brief_title", "official_title", "enrollment",
-             "sponsor", "f_name", "l_name", "phone", "email", "Other Study Contact", "country", "condition"], isFirst=True)
+             "sponsor", "f_name", "l_name", "phone", "email", "Other Study Contact", "country", "sequence-category", "condition"], isFirst=True)
     get_all_data(API, output_file_name, enrollment_filter=enrollment_filter)
 
-    post_process(output_file_name)
+    output_file_name_final = post_process(
+        output_file_name, email_validation_api_key)
 
     # send_email(output_file_name, reciever_email, sender_email, password)
+
+    update_email_database(file_name=output_file_name_final)
 
 
 def main():

@@ -1,3 +1,4 @@
+import emailable
 from urllib.parse import urlparse
 import re
 from datetime import datetime, timedelta, timezone
@@ -63,7 +64,10 @@ def get_contact_enrichment_data(f_name, l_name, email):
     }
 
     response = requests.request("POST", url, headers=headers, json=data)
-    json_data = response.json()
+    try:
+        json_data = response.json()
+    except:
+        json_data = {}
     return json_data, response
 
 
@@ -89,7 +93,18 @@ def csv_to_list_of_dicts(csv_filename):
     return list_of_dicts
 
 
-def process_each_data(profile_data, file_name):
+def check_deliverable(email, api_key):
+    if email.strip() == "":
+        return True
+
+    isDeliverable = emailable.Client(api_key).verify(email).state
+    if isDeliverable == "undeliverable":
+        return False
+    else:
+        return True
+
+
+def process_each_data(profile_data, file_name, api_key):
 
     f_name = profile_data["f_name"]
     l_name = profile_data["l_name"]
@@ -128,28 +143,37 @@ def process_each_data(profile_data, file_name):
         company_city = json_to_text(
             company_json_data, ["organization", "city"])
 
-        each_profile["city"] = company_city
-        each_profile["country"] = company_country
-        each_profile["state"] = company_state
-        each_profile["company_website"] = company_website
+        if company_country != "":
 
-        # print(company_json_data)
-        # input()
+            each_profile["city"] = company_city
+            each_profile["country"] = company_country
+            each_profile["state"] = company_state
+            each_profile["company_website"] = company_website
+        else:
+            each_profile["city"] = company_city
+            each_profile["country"] = profile_data["country"]
+            each_profile["state"] = company_state
+            each_profile["company_website"] = company_website
 
     if new_email.lower().strip() == "" or new_email.lower().strip() == email.lower().strip():
         pass
     else:
         email = new_email
 
-    each_profile["email"] = email
+    is_deliverable = check_deliverable(email, api_key)
+
+    if is_deliverable == True:
+        each_profile["email"] = email
+    else:
+        each_profile["email"] = ""
 
     data_list = [each_profile["nct_id"], each_profile["url"], each_profile["posted date"], each_profile["brief_title"],
-                 each_profile["official_title"], each_profile["enrollment"], each_profile["sponsor"], each_profile["f_name"], each_profile["l_name"], each_profile["job_title"], each_profile["phone"], each_profile["email"], each_profile["linkedin_url"], each_profile["Other Study Contact"], each_profile["city"], each_profile["state"], each_profile["country"], each_profile["company_website"], each_profile["condition"]]
+                 each_profile["official_title"], each_profile["enrollment"], each_profile["sponsor"], each_profile["f_name"], each_profile["l_name"], each_profile["job_title"], each_profile["phone"], each_profile["email"], each_profile["linkedin_url"], each_profile["Other Study Contact"], each_profile["city"], each_profile["state"], each_profile["country"], each_profile["company_website"], each_profile["sequence-category"], each_profile["condition"]]
 
     save_csv(file_name, data_list, isFirst=False, removeAtStarting=False)
 
 
-def post_process(temp_file_org):
+def post_process(temp_file_org, api_key):
     print("Started post processing.............")
     output_file_name = f'{temp_file_org.split("_temp")[0].strip()}.csv'
 
@@ -157,12 +181,12 @@ def post_process(temp_file_org):
     # output_file_name = f"{(datetime.now(timezone.utc) - timedelta(hours=8, days=1)).strftime('%Y-%m-%d')}-clinicaltrials-gov.csv"
 
     save_csv(output_file_name, ["nct_id", "url", "posted date", "brief_title", "official_title", "enrollment",
-             "sponsor", "f_name", "l_name", "job_title", "phone", "email", "linkedin_url", "Other Study Contact", "city", "state", "country", "company_website", "condition"], isFirst=True, removeAtStarting=False)
+             "sponsor", "f_name", "l_name", "job_title", "phone", "email", "linkedin_url", "Other Study Contact", "city", "state", "country", "company_website", "sequence-category", "condition"], isFirst=True, removeAtStarting=False)
 
     for each_data in all_data_from_csv:
 
-        process_each_data(each_data, output_file_name)
+        process_each_data(each_data, output_file_name, api_key)
         # print(contact_info_dict["person"]["organization"]["city"])
     print("Post processing finished!")
-
+    return output_file_name
 # post_process("2023-03-05-clinicaltrials-gov_temp.csv")
