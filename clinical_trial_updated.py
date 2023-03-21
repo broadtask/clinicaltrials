@@ -148,7 +148,16 @@ def check_listed_word_in_name(name):
                     "The",
                     "Diagnostic",
                     "Radiology",
-                    "Novartis"]
+                    "Novartis",
+                    "Contact",
+                    "Info",
+                    "Information",
+                    "Clin", "Triage",
+                    "Line",
+                    "Of",
+                    "Email",
+                    "NCT", "Site", "Bristol-Myers", "Squibb", "Med",
+                    "HR"]
     if any(word in name.strip().lower() for word in listed_words):
 
         return True
@@ -247,6 +256,9 @@ def save_csv(filename, data_list, isFirst=False):
             return
         else:
             pass
+
+        if check_listed_word_in_name(email.split("@")[0].strip()):
+            email = ""
 
         full_name = f"{first_name} {last_name}"
 
@@ -442,10 +454,12 @@ def get_category_data(each_study, enrollment_data, country):
         enrollment = 999999
 
     study_text = f"{each_study}".lower()
+    study_text_without_elegibility = study_text.replace(study_text.split(
+        "'eligibilitymodule':")[1].split(r"}},")[0].strip(), "").strip()
 
-    if "diabetes" in study_text or "diabetic" in study_text or "prediabetes" in study_text or "prediabetic" in study_text:
+    if "diabetes" in study_text_without_elegibility or "diabetic" in study_text_without_elegibility or "prediabetes" in study_text_without_elegibility or "prediabetic" in study_text_without_elegibility:
         category = "Diabetes"
-    elif "dementia" in study_text or "cognitive impairment" in study_text or "cognitive decline" in study_text or "cognitive dysfunction" in study_text or "neurocognitive dysfunction" in study_text or "cognitive deficits" in study_text:
+    elif "dementia" in study_text_without_elegibility or "cognitive impairment" in study_text_without_elegibility or "cognitive decline" in study_text_without_elegibility or "cognitive dysfunction" in study_text_without_elegibility or "neurocognitive dysfunction" in study_text_without_elegibility or "cognitive deficits" in study_text_without_elegibility:
         category = "Dementia"
     elif "cbt" in study_text or "cognitive behavioral" in study_text or "cognitive behavior" in study_text:
         category = "CBT"

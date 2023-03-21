@@ -38,7 +38,7 @@ def update_email_database(database_name="email_database.csv", file_name=""):
                 break
         if matched == False:
             data_list = [each_recent_email, today,
-                         today, 1, each_recent_email_data[18]]
+                         today, 1, each_recent_email_data[16]]
             email_database_data.append(data_list)
 
         with open(database_name, 'w', newline='', encoding='utf-8') as file:
