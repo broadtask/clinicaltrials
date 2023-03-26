@@ -112,6 +112,8 @@ def read_scrapped_data(previous_data_file):
 
 def check_listed_word_in_name(name):
     listed_words = ["call",
+                    "projects",
+                    "project",
                     "center",
                     "recruitment",
                     "office",
@@ -158,6 +160,8 @@ def check_listed_word_in_name(name):
                     "Email",
                     "NCT", "Site", "Bristol-Myers", "Squibb", "Med",
                     "HR"]
+
+    listed_words = [s.lower() for s in listed_words]
     if any(word in name.strip().lower() for word in listed_words):
 
         return True
@@ -245,6 +249,7 @@ def save_csv(filename, data_list, isFirst=False):
         other_name = " ".join(other_name_splitted).title()
         phone = data_list[8].replace("+", "")
         email = data_list[9]
+        email_for_country = email
 
         if any(competitor in email for competitor in ALL_COMPLETITORS):
 
@@ -292,7 +297,7 @@ def save_csv(filename, data_list, isFirst=False):
         category = get_category_data(EACH_STUDY, data_list[5], country)
 
         data_set = [data_list[0], data_list[1], data_list[2], data_list[3], data_list[4], data_list[5],
-                    data_list[6], first_name.title(), last_name.title(), phone, email, other_name, country, category, data_list[12]]
+                    data_list[6], first_name.title(), last_name.title(), phone, email, other_name, country, category, data_list[12], email_for_country]
 
     with open(f'{filename}', "a", newline='', encoding='utf-8-sig') as fp:
         wr = csv.writer(fp, dialect='excel')
@@ -319,7 +324,7 @@ def check_posted_date(posted_date):
                    timedelta(hours=time_zone_fixed))
     todays_date_string = todays_date.strftime("%B %d, %Y")
     prev_day = (todays_date -
-                timedelta(days=1)).strftime("%B %d, %Y")
+                timedelta(days=2)).strftime("%B %d, %Y")
     FMT = "%B %d, %Y"
     posted_date_formatted = datetime.strptime(posted_date, FMT)
     today_date_formatted = datetime.strptime(todays_date_string, FMT)
@@ -454,8 +459,11 @@ def get_category_data(each_study, enrollment_data, country):
         enrollment = 999999
 
     study_text = f"{each_study}".lower()
-    study_text_without_elegibility = study_text.replace(study_text.split(
-        "'eligibilitymodule':")[1].split(r"}},")[0].strip(), "").strip()
+    try:
+        study_text_without_elegibility = study_text.split(
+            "'condition':")[1].split(r"]},")[0].strip().lower()
+    except:
+        study_text_without_elegibility = ""
 
     if "diabetes" in study_text_without_elegibility or "diabetic" in study_text_without_elegibility or "prediabetes" in study_text_without_elegibility or "prediabetic" in study_text_without_elegibility:
         category = "Diabetes"
@@ -824,7 +832,7 @@ def scraper():
     API = "https://clinicaltrials.gov/api/query/full_studies"
 
     save_csv(output_file_name, ["nct_id", "url", "posted date", "brief_title", "official_title", "enrollment",
-             "sponsor", "f_name", "l_name", "phone", "email", "Other Study Contact", "country", "sequence-category", "condition"], isFirst=True)
+             "sponsor", "f_name", "l_name", "phone", "email", "Other Study Contact", "country", "sequence-category", "condition", "email_for_country"], isFirst=True)
     get_all_data(API, output_file_name, enrollment_filter=enrollment_filter)
 
     output_file_name_final = post_process(

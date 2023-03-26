@@ -1,3 +1,4 @@
+import time
 import emailable
 from urllib.parse import urlparse
 import re
@@ -11,6 +12,23 @@ import csv
 import json
 from mail import send_email
 import pandas as pd
+
+
+def xpath_to_text(webpage, xpath):
+    """Conver elemnt to text"""
+
+    try:
+        return webpage.xpath(xpath)[0].strip()
+    except:
+        return ""
+
+
+def get_tld_list():
+    domain = pd.read_csv("tld.csv", keep_default_na=False)[
+        "domain"].values.tolist()
+    country = pd.read_csv("tld.csv", keep_default_na=False)[
+        "country"].values.tolist()
+    return domain, country
 
 
 def save_csv(filename, data_list, isFirst=False, removeAtStarting=True):
@@ -104,11 +122,12 @@ def check_deliverable(email, api_key):
         return True
 
 
-def process_each_data(profile_data, file_name, api_key):
+def process_each_data(profile_data, file_name, api_key, domain_list, dom_country_list):
 
     f_name = profile_data["f_name"]
     l_name = profile_data["l_name"]
     email = profile_data["email"]
+    email_for_country = profile_data["email_for_country"]
 
     contact_info_dict, response = get_contact_enrichment_data(
         f_name, l_name, email)
@@ -131,7 +150,13 @@ def process_each_data(profile_data, file_name, api_key):
     if new_country != "":
         each_profile["country"] = new_country
     else:
-        company_domain = email.split("@")[-1].strip()
+        if email != "":
+            company_domain = email.split("@")[-1].strip()
+        elif email_for_country != "":
+            company_domain = email_for_country.split("@")[-1].strip()
+        else:
+            company_domain = ""
+
         company_json_data, response = get_company_enrichment_data(
             company_domain)
         company_website = json_to_text(
@@ -178,10 +203,86 @@ def process_each_data(profile_data, file_name, api_key):
     each_profile["l_name"] = last_name.title()
     each_profile["Other Study Contact"] = other_study_contact.title()
 
+    if each_profile["country"] == "":
+
+        if each_profile["email"] != "":
+            try:
+                email_domain = "." + each_profile["email"].split(
+                    "@")[-1].strip().split(".")[-1].strip().lower()
+            except:
+                email_domain = "none"
+
+            if email_domain in domain_list:
+                domain_index = domain_list.index(email_domain)
+                country_name = dom_country_list[domain_index]
+                each_profile["country"] = country_name
+
+    if "china" in each_profile["country"].lower():
+        return
+
     data_list = [each_profile["nct_id"], each_profile["url"], each_profile["posted date"], each_profile["enrollment"], each_profile["sponsor"], each_profile["f_name"], each_profile["l_name"], each_profile["job_title"], each_profile["phone"],
                  each_profile["email"], each_profile["linkedin_url"], each_profile["Other Study Contact"], each_profile["city"], each_profile["state"], each_profile["country"], each_profile["company_website"], each_profile["sequence-category"], each_profile["condition"]]
 
     save_csv(file_name, data_list, isFirst=False, removeAtStarting=False)
+
+
+def group_by_id(my_dict):
+    # create a list of unique ids in the dictionary
+    unique_ids = list(set([d['nct_id'] for d in my_dict]))
+
+    # create a list of lists, where each sublist contains dictionaries with the same id
+
+    result = []
+    for id in unique_ids:
+        sublist = [d for d in my_dict if d['nct_id'] == id]
+        result.append(sublist)
+
+    return result
+
+
+def get_country_status(data):
+
+    country_list = []
+
+    for each_data in data:
+
+        if each_data["country"] != "":
+            country_list.append(each_data["country"])
+
+    if len(country_list) == 0:
+        return ""
+    else:
+        if "United States" in country_list:
+            return "United States"
+        else:
+            return country_list[0]
+
+
+def save_dict_to_csv(dictionary, filename):
+    with open(filename, mode='a', newline='', encoding='utf-8-sig') as file:
+        writer = csv.writer(file)
+        writer.writerow(dictionary.values())
+
+
+def apply_algorithm(file_name):
+
+    all_data = csv_to_list_of_dicts(file_name)
+
+    save_csv(file_name, ["nct_id", "url", "posted date", "enrollment",
+             "sponsor", "f_name", "l_name", "job_title", "phone", "email", "linkedin_url", "Other Study Contact", "city", "state", "country", "company_website", "sequence-category", "condition"], isFirst=True, removeAtStarting=True)
+    similar_nct_id_list = group_by_id(all_data)
+
+    for each_similar_data in similar_nct_id_list:
+
+        country_status = get_country_status(each_similar_data)
+
+        for each_nct in each_similar_data:
+            country = each_nct["country"]
+            if country.strip() == "":
+                country = country_status
+                each_nct["country"] = country
+
+            save_dict_to_csv(each_nct, file_name)
 
 
 def post_process(temp_file_org, api_key):
@@ -193,11 +294,17 @@ def post_process(temp_file_org, api_key):
 
     save_csv(output_file_name, ["nct_id", "url", "posted date", "enrollment",
              "sponsor", "f_name", "l_name", "job_title", "phone", "email", "linkedin_url", "Other Study Contact", "city", "state", "country", "company_website", "sequence-category", "condition"], isFirst=True, removeAtStarting=False)
-
+    domain_list, dom_country_list = get_tld_list()
     for each_data in all_data_from_csv:
 
-        process_each_data(each_data, output_file_name, api_key)
+        process_each_data(each_data, output_file_name,
+                          api_key, domain_list, dom_country_list)
         # print(contact_info_dict["person"]["organization"]["city"])
+    time.sleep(2)
+    apply_algorithm(output_file_name)
     print("Post processing finished!")
     return output_file_name
+
+
 # post_process("2023-03-05-clinicaltrials-gov_temp.csv")
+# apply_algorithm("2023-03-22-clinicaltrials-gov.csv")

@@ -15,18 +15,16 @@ def update_email_database(database_name="email_database.csv", file_name=""):
 
     today = datetime.datetime.now().strftime('%d-%m-%Y')
 
-    email_database_data = read_csv(database_name)
-    new_database = email_database_data.copy()
-
     recent_emails_all_datalist = read_csv(file_name)
     recent_emails_all_datalist.pop(0)
 
     for each_recent_email_data in recent_emails_all_datalist:
         matched = False
-        each_recent_email = each_recent_email_data[11]
+        each_recent_email = each_recent_email_data[9]
         if each_recent_email.strip() == "":
             continue
-
+        email_database_data = read_csv(database_name)
+        new_database = email_database_data.copy()
         for indx, each_email_on_database in enumerate(new_database):
 
             if each_recent_email.lower().strip() == each_email_on_database[0].lower().strip():
