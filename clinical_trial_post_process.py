@@ -216,9 +216,20 @@ def process_each_data(profile_data, file_name, api_key, domain_list, dom_country
                 domain_index = domain_list.index(email_domain)
                 country_name = dom_country_list[domain_index]
                 each_profile["country"] = country_name
+    try:
+        if "china" in each_profile["country"].lower() or "russia" in each_profile["country"].lower():
+            return
+    except:
+        pass
 
-    if "china" in each_profile["country"].lower():
-        return
+    try:
+        if each_profile["country"].lower() == "united states" and each_profile["sequence-category"] == "Not USA":
+            each_profile["sequence-category"] = "USA"
+    except:
+        pass
+
+    print(each_profile["country"])
+    print(each_profile["sequence-category"])
 
     data_list = [each_profile["nct_id"], each_profile["url"], each_profile["posted date"], each_profile["enrollment"], each_profile["sponsor"], each_profile["f_name"], each_profile["l_name"], each_profile["job_title"], each_profile["phone"],
                  each_profile["email"], each_profile["linkedin_url"], each_profile["Other Study Contact"], each_profile["city"], each_profile["state"], each_profile["country"], each_profile["company_website"], each_profile["sequence-category"], each_profile["condition"]]
@@ -281,6 +292,9 @@ def apply_algorithm(file_name):
             if country.strip() == "":
                 country = country_status
                 each_nct["country"] = country
+
+            if each_nct["country"].lower() == "united states" and each_nct["sequence-category"].lower() == "not usa":
+                each_nct["sequence-category"] = "USA"
 
             save_dict_to_csv(each_nct, file_name)
 

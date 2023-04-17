@@ -159,7 +159,7 @@ def check_listed_word_in_name(name):
                     "Of",
                     "Email",
                     "NCT", "Site", "Bristol-Myers", "Squibb", "Med",
-                    "HR"]
+                    "HR", "quality", "management", "compliance"]
 
     listed_words = [s.lower() for s in listed_words]
     if any(word in name.strip().lower() for word in listed_words):
@@ -193,7 +193,7 @@ def remove_middle_initials_from_name(name):
     else:
         pass
 
-    new_name = name.replace(middle_name, "").strip()
+    new_name = name.replace(f"{middle_name} ", "").strip()
 
     return re.sub(' +', ' ', new_name)
 
@@ -324,7 +324,7 @@ def check_posted_date(posted_date):
                    timedelta(hours=time_zone_fixed))
     todays_date_string = todays_date.strftime("%B %d, %Y")
     prev_day = (todays_date -
-                timedelta(days=2)).strftime("%B %d, %Y")
+                timedelta(days=1)).strftime("%B %d, %Y")
     FMT = "%B %d, %Y"
     posted_date_formatted = datetime.strptime(posted_date, FMT)
     today_date_formatted = datetime.strptime(todays_date_string, FMT)
@@ -475,7 +475,7 @@ def get_category_data(each_study, enrollment_data, country):
         category = "mHealth"
     elif "digital health" in study_text or "digital healthcare" in study_text or "digital therapy" in study_text:
         category = "Digital Health"
-    elif enrollment <= 100:
+    elif enrollment < 100:
         category = "<100P"
     elif country.lower() == "united states" or country.lower() == "us" or country.lower() == "usa":
         category = "USA"
