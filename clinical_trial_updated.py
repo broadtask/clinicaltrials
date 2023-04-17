@@ -193,7 +193,10 @@ def remove_middle_initials_from_name(name):
     else:
         pass
 
-    new_name = name.replace(f"{middle_name} ", "").strip()
+    if middle_name.strip() != "":
+        new_name = name.replace(f"{middle_name} ", "").strip()
+    else:
+        new_name = name
 
     return re.sub(' +', ' ', new_name)
 
