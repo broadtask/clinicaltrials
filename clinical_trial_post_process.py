@@ -113,13 +113,15 @@ def csv_to_list_of_dicts(csv_filename):
 
 def check_deliverable(email, api_key):
     if email.strip() == "":
-        return True
+        return True, "no email found"
 
     isDeliverable = emailable.Client(api_key).verify(email).state
+
     if isDeliverable == "undeliverable":
-        return False
+
+        return False, isDeliverable
     else:
-        return True
+        return True, isDeliverable
 
 
 def process_each_data(profile_data, file_name, api_key, domain_list, dom_country_list):
@@ -127,9 +129,10 @@ def process_each_data(profile_data, file_name, api_key, domain_list, dom_country
     f_name = profile_data["f_name"]
     l_name = profile_data["l_name"]
     email = profile_data["email"]
+
     email_for_country = profile_data["email_for_country"]
 
-    contact_info_dict, response = get_contact_enrichment_data(
+    contact_info_dict = get_contact_enrichment_data(
         f_name, l_name, email)
 
     new_city = json_to_text(contact_info_dict, ["person", "city"])
@@ -185,12 +188,13 @@ def process_each_data(profile_data, file_name, api_key, domain_list, dom_country
     else:
         email = new_email
 
-    is_deliverable = check_deliverable(email, api_key)
+    # is_deliverable, validation_response = check_deliverable(email, api_key)
 
-    if is_deliverable == True:
-        each_profile["email"] = email
-    else:
-        each_profile["email"] = ""
+    # if is_deliverable == True:
+    #     each_profile["email"] = email
+    # else:
+    #     each_profile["email"] = ""
+    each_profile["email"] = email
 
     # REMOVE PROFESSOR FROM NAMES
     first_name = each_profile["f_name"].lower().replace(
@@ -227,13 +231,12 @@ def process_each_data(profile_data, file_name, api_key, domain_list, dom_country
             each_profile["sequence-category"] = "USA"
     except:
         pass
-
-    print(each_profile["country"])
-    print(each_profile["sequence-category"])
+    # each_profile["ValidationResponse"] = validation_response
 
     data_list = [each_profile["nct_id"], each_profile["url"], each_profile["posted date"], each_profile["enrollment"], each_profile["sponsor"], each_profile["f_name"], each_profile["l_name"], each_profile["job_title"], each_profile["phone"],
                  each_profile["email"], each_profile["linkedin_url"], each_profile["Other Study Contact"], each_profile["city"], each_profile["state"], each_profile["country"], each_profile["company_website"], each_profile["sequence-category"], each_profile["condition"]]
 
+    print(f"-----------------------------------------------------\n")
     save_csv(file_name, data_list, isFirst=False, removeAtStarting=False)
 
 
@@ -307,7 +310,7 @@ def post_process(temp_file_org, api_key):
     # output_file_name = f"{(datetime.now(timezone.utc) - timedelta(hours=8, days=1)).strftime('%Y-%m-%d')}-clinicaltrials-gov.csv"
 
     save_csv(output_file_name, ["nct_id", "url", "posted date", "enrollment",
-             "sponsor", "f_name", "l_name", "job_title", "phone", "email", "linkedin_url", "Other Study Contact", "city", "state", "country", "company_website", "sequence-category", "condition"], isFirst=True, removeAtStarting=False)
+             "sponsor", "f_name", "l_name", "job_title", "phone", "email", "validationResponse", "linkedin_url", "Other Study Contact", "city", "state", "country", "company_website", "sequence-category", "condition"], isFirst=True, removeAtStarting=False)
     domain_list, dom_country_list = get_tld_list()
     for each_data in all_data_from_csv:
 

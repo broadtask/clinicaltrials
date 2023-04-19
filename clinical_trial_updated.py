@@ -1,3 +1,4 @@
+import time
 from urllib.parse import urlparse
 import re
 from datetime import datetime, timedelta, timezone
@@ -505,7 +506,15 @@ def get_all_data(API, file_name, enrollment_filter=40):
             'max_rnk': max_rank,
             'fmt': 'json', }
 
-        response = requests.get(API, params=params)
+        while True:
+            try:
+
+                response = requests.get(API, params=params, timeout=30)
+                break
+            except:
+                time.sleep(5)
+                print("trying again....")
+                continue
 
         all_study_data = response.json()["FullStudiesResponse"]["FullStudies"]
 
@@ -841,7 +850,7 @@ def scraper():
     output_file_name_final = post_process(
         output_file_name, email_validation_api_key)
 
-    # send_email(output_file_name, reciever_email, sender_email, password)
+    send_email(output_file_name, reciever_email, sender_email, password)
 
     update_email_database(file_name=output_file_name_final)
 
