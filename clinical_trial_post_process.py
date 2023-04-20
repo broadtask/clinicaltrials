@@ -116,14 +116,22 @@ def check_deliverable(email, api_key):
     if email.strip() == "":
         return True
 
-    isDeliverable = emailable.Client(api_key).verify(
-        email, accept_all=True, timeout=30, smtp=True).state
 
-    if isDeliverable == "undeliverable":
 
+    c = 0
+    while c < 3:
+        isDeliverable = emailable.Client(api_key).verify(
+            email, accept_all=True, timeout=30, smtp=True).state
+
+        if isDeliverable == "undeliverable":
+
+            c += 1
+            continue
+        else:
+            return True
+
+    if c == 3:
         return False
-    else:
-        return True
 
 
 def process_each_data(profile_data, file_name, api_key, domain_list, dom_country_list):
