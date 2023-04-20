@@ -20,7 +20,7 @@ EACH_STUDY = ""
 
 def read_competitors():
 
-    file_name = "competitors.csv"
+    file_name = "/home/clinicaltrials/clinical_trial_updated/competitors.csv"
     domains = []
 
     all_completitors = pd.read_csv(file_name, keep_default_na=False)[
@@ -833,14 +833,15 @@ def get_all_data(API, file_name, enrollment_filter=40):
 
 
 def scraper():
-    output_file_name = f"{(datetime.now(timezone.utc) - timedelta(hours=8, days=1)).strftime('%Y-%m-%d')}-clinicaltrials-gov_temp.csv"
+    output_file_name = f"/home/clinicaltrials/clinical_trial_updated/all_files/{(datetime.now(timezone.utc) - timedelta(hours=8, days=1)).strftime('%Y-%m-%d')}-clinicaltrials-gov_temp.csv"
+    print(output_file_name)
     enrollment_filter = 40
-    reciever_email = "alia6783@gmail.com"
+    reciever_email = "me.artu07@gmail.com"
+    # reciever_email = "alia6783@gmail.com"
     sender_email = "broadbreada@gmail.com"
     password = "scxmzgfifsurfkgk"
 
-    email_validation_api_key = "live_b5be4e7aa50d05d4a67b"
-    # email_validation_api_key = "test_ec6969802851c6fefad8"
+    email_validation_api_key = "test_ec6969802851c6fefad8"
 
     API = "https://clinicaltrials.gov/api/query/full_studies"
 

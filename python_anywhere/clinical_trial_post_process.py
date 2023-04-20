@@ -1,5 +1,4 @@
 import time
-import emailable
 from urllib.parse import urlparse
 import re
 from datetime import datetime, timedelta, timezone
@@ -12,7 +11,6 @@ import csv
 import json
 from mail import send_email
 import pandas as pd
-import emailable
 
 
 def xpath_to_text(webpage, xpath):
@@ -25,9 +23,9 @@ def xpath_to_text(webpage, xpath):
 
 
 def get_tld_list():
-    domain = pd.read_csv("tld.csv", keep_default_na=False)[
+    domain = pd.read_csv("/home/clinicaltrials/clinical_trial_updated/tld.csv", keep_default_na=False)[
         "domain"].values.tolist()
-    country = pd.read_csv("tld.csv", keep_default_na=False)[
+    country = pd.read_csv("/home/clinicaltrials/clinical_trial_updated/tld.csv", keep_default_na=False)[
         "country"].values.tolist()
     return domain, country
 
@@ -112,18 +110,17 @@ def csv_to_list_of_dicts(csv_filename):
     return list_of_dicts
 
 
-def check_deliverable(email, api_key):
-    if email.strip() == "":
-        return True
+# def check_deliverable(email, api_key):
+#     if email.strip() == "":
+#         return True, "no email found"
 
-    isDeliverable = emailable.Client(api_key).verify(
-        email, accept_all=True, timeout=30, smtp=True).state
+#     isDeliverable = emailable.Client(api_key).verify(email).state
 
-    if isDeliverable == "undeliverable":
+#     if isDeliverable == "undeliverable":
 
-        return False
-    else:
-        return True
+#         return False, isDeliverable
+#     else:
+#         return True, isDeliverable
 
 
 def process_each_data(profile_data, file_name, api_key, domain_list, dom_country_list):
@@ -190,13 +187,13 @@ def process_each_data(profile_data, file_name, api_key, domain_list, dom_country
     else:
         email = new_email
 
-    is_deliverable = check_deliverable(email, api_key)
+    # is_deliverable, validation_response = check_deliverable(email, api_key)
 
-    if is_deliverable == True:
-        each_profile["email"] = email
-    else:
-        each_profile["email"] = ""
-    # each_profile["email"] = email
+    # if is_deliverable == True:
+    #     each_profile["email"] = email
+    # else:
+    #     each_profile["email"] = ""
+    each_profile["email"] = email
 
     # REMOVE PROFESSOR FROM NAMES
     first_name = each_profile["f_name"].lower().replace(
@@ -238,7 +235,6 @@ def process_each_data(profile_data, file_name, api_key, domain_list, dom_country
     data_list = [each_profile["nct_id"], each_profile["url"], each_profile["posted date"], each_profile["enrollment"], each_profile["sponsor"], each_profile["f_name"], each_profile["l_name"], each_profile["job_title"], each_profile["phone"],
                  each_profile["email"], each_profile["linkedin_url"], each_profile["Other Study Contact"], each_profile["city"], each_profile["state"], each_profile["country"], each_profile["company_website"], each_profile["sequence-category"], each_profile["condition"]]
 
-    print(f"-----------------------------------------------------\n")
     save_csv(file_name, data_list, isFirst=False, removeAtStarting=False)
 
 
@@ -283,6 +279,7 @@ def save_dict_to_csv(dictionary, filename):
 def apply_algorithm(file_name):
 
     all_data = csv_to_list_of_dicts(file_name)
+    print(all_data[0])
 
     save_csv(file_name, ["nct_id", "url", "posted date", "enrollment",
              "sponsor", "f_name", "l_name", "job_title", "phone", "email", "linkedin_url", "Other Study Contact", "city", "state", "country", "company_website", "sequence-category", "condition"], isFirst=True, removeAtStarting=True)
