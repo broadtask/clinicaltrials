@@ -110,17 +110,17 @@ def csv_to_list_of_dicts(csv_filename):
     return list_of_dicts
 
 
-# def check_deliverable(email, api_key):
-#     if email.strip() == "":
-#         return True, "no email found"
+ def check_deliverable(email, api_key):
+     if email.strip() == "":
+         return True, "no email found"
 
-#     isDeliverable = emailable.Client(api_key).verify(email).state
+     isDeliverable = emailable.Client(api_key).verify(email).state
 
-#     if isDeliverable == "undeliverable":
+     if isDeliverable == "undeliverable":
 
-#         return False, isDeliverable
-#     else:
-#         return True, isDeliverable
+         return False, isDeliverable
+     else:
+         return True, isDeliverable
 
 
 def process_each_data(profile_data, file_name, api_key, domain_list, dom_country_list):
