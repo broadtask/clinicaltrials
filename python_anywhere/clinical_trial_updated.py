@@ -852,7 +852,7 @@ def scraper():
     output_file_name_final = post_process(
         output_file_name, email_validation_api_key)
 
-    send_email(output_file_name, reciever_email, sender_email, password)
+    send_email(output_file_name_final, reciever_email, sender_email, password)
 
     update_email_database(file_name=output_file_name_final)
 
