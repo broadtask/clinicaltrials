@@ -1,3 +1,4 @@
+import sys
 import time
 from urllib.parse import urlparse
 import re
@@ -62,6 +63,11 @@ def get_company_enrichment_data(domain_name):
     response = requests.request(
         "GET", url, headers=headers, params=querystring)
 
+    if response.status_code != 200:
+        print(f"Apollo API error!")
+        print(f"RESPONSE: ", response.text)
+        os._exit(1)
+
     return response.json(), response
 
 
@@ -82,6 +88,10 @@ def get_contact_enrichment_data(f_name, l_name, email):
     }
 
     response = requests.request("POST", url, headers=headers, json=data)
+    if response.status_code != 200:
+        print(f"Apollo API error!")
+        print(f"RESPONSE: ", response.text)
+        os._exit(1)
     try:
         json_data = response.json()
     except:
@@ -117,8 +127,11 @@ def check_deliverable(email, api_key):
 
     c = 0
     while c < 3:
-        isDeliverable = emailable.Client(api_key).verify(
-            email, accept_all=True, timeout=30, smtp=True).state
+        try:
+            isDeliverable = emailable.Client(api_key).verify(
+                email, accept_all=True, timeout=30, smtp=True).state
+        except:
+            isDeliverable = ""
 
         if isDeliverable == "undeliverable":
 
@@ -128,6 +141,7 @@ def check_deliverable(email, api_key):
             return True
 
     if c == 3:
+
         return False
 
 
@@ -316,12 +330,13 @@ def post_process(temp_file_org, api_key):
     # output_file_name = f"{(datetime.now(timezone.utc) - timedelta(hours=8, days=1)).strftime('%Y-%m-%d')}-clinicaltrials-gov.csv"
 
     save_csv(output_file_name, ["nct_id", "url", "posted date", "enrollment",
-             "sponsor", "f_name", "l_name", "job_title", "phone", "email", "validationResponse", "linkedin_url", "Other Study Contact", "city", "state", "country", "company_website", "sequence-category", "condition"], isFirst=True, removeAtStarting=False)
+             "sponsor", "f_name", "l_name", "job_title", "phone", "email", "validationResponse", "linkedin_url", "Other Study Contact", "city", "state", "country", "company_website", "sequence-category", "condition"], isFirst=True, removeAtStarting=True)
     domain_list, dom_country_list = get_tld_list()
-    for each_data in all_data_from_csv:
+    for idx, each_data in enumerate(all_data_from_csv):
 
         process_each_data(each_data, output_file_name,
                           api_key, domain_list, dom_country_list)
+        print(f"Post processing: {idx+1}/{len(all_data_from_csv)}")
         # print(contact_info_dict["person"]["organization"]["city"])
     time.sleep(2)
     apply_algorithm(output_file_name)

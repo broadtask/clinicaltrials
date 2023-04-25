@@ -183,7 +183,7 @@ def remove_middle_initials_from_name(name):
 
         split_name.pop()
         first_name = split_name.pop(0)
-        if ("." in first_name.strip() and len(first_name) <= 2) or first_name.strip().lower() == "dr" or first_name.strip().lower == "dr.":
+        if ("." in first_name.strip() and len(first_name) <= 2) or first_name.strip().lower() == "dr" or first_name.strip().lower() == "dr.":
             name = name.replace(first_name, "")
 
         for s in split_name:
@@ -197,8 +197,7 @@ def remove_middle_initials_from_name(name):
     if middle_name.strip() != "":
         new_name = name.replace(f"{middle_name} ", "").strip()
     else:
-        new_name = name
-
+        new_name = name.strip()
     return re.sub(' +', ' ', new_name)
 
 
@@ -231,7 +230,7 @@ def save_csv(filename, data_list, isFirst=False):
         except:
             other_name = ""
 
-        name_splitted = name.split(" ")
+        name_splitted = name.strip().split(" ")
 
         if len(name_splitted) > 1:
             name_splitted = [s.strip() for s in name_splitted if len(
@@ -834,6 +833,8 @@ def get_all_data(API, file_name, enrollment_filter=40):
 
 def scraper():
     output_file_name = f"{(datetime.now(timezone.utc) - timedelta(hours=8, days=1)).strftime('%Y-%m-%d')}-clinicaltrials-gov_temp.csv"
+    # output_file_name = f"2023-04-18-clinicaltrials-gov_temp.csv"
+
     enrollment_filter = 40
     reciever_email = "alia6783@gmail.com"
     sender_email = "broadbreada@gmail.com"

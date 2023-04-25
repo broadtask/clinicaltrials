@@ -183,7 +183,7 @@ def remove_middle_initials_from_name(name):
 
         split_name.pop()
         first_name = split_name.pop(0)
-        if ("." in first_name.strip() and len(first_name) <= 2) or first_name.strip().lower() == "dr" or first_name.strip().lower == "dr.":
+        if ("." in first_name.strip() and len(first_name) <= 2) or first_name.strip().lower() == "dr" or first_name.strip().lower() == "dr.":
             name = name.replace(first_name, "")
 
         for s in split_name:
@@ -197,7 +197,7 @@ def remove_middle_initials_from_name(name):
     if middle_name.strip() != "":
         new_name = name.replace(f"{middle_name} ", "").strip()
     else:
-        new_name = name
+        new_name = name.strip()
 
     return re.sub(' +', ' ', new_name)
 
@@ -231,7 +231,7 @@ def save_csv(filename, data_list, isFirst=False):
         except:
             other_name = ""
 
-        name_splitted = name.split(" ")
+        name_splitted = name.strip().split(" ")
 
         if len(name_splitted) > 1:
             name_splitted = [s.strip() for s in name_splitted if len(
@@ -841,7 +841,7 @@ def scraper():
     sender_email = "broadbreada@gmail.com"
     password = "scxmzgfifsurfkgk"
 
-    email_validation_api_key = "test_ec6969802851c6fefad8"
+    email_validation_api_key = "live_b5be4e7aa50d05d4a67b"
 
     API = "https://clinicaltrials.gov/api/query/full_studies"
 
