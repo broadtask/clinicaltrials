@@ -275,7 +275,7 @@ def save_csv(filename, data_list, isFirst=False):
         else:
             Name_Data = full_name
 
-        sponsor_name = data_list[5].strip()
+        sponsor_name = data_list[6].strip()
 
         if first_name.lower() in sponsor_name.lower() and last_name.lower() in sponsor_name.lower():
             return
@@ -296,10 +296,10 @@ def save_csv(filename, data_list, isFirst=False):
 
         # else:
         #     pass
+        enrollment_data = data_list[5].replace(",", "").strip()
+        category = get_category_data(EACH_STUDY, enrollment_data, country)
 
-        category = get_category_data(EACH_STUDY, data_list[5], country)
-
-        data_set = [data_list[0], data_list[1], data_list[2], data_list[3], data_list[4], data_list[5],
+        data_set = [data_list[0], data_list[1], data_list[2], data_list[3], data_list[4], enrollment_data,
                     data_list[6], first_name.title(), last_name.title(), phone, email, other_name, country, category, data_list[12], email_for_country]
 
     with open(f'{filename}', "a", newline='', encoding='utf-8-sig') as fp:
@@ -457,7 +457,7 @@ def get_uniq_list_of_contacts(contact_list, investor_list):
 def get_category_data(each_study, enrollment_data, country):
 
     try:
-        enrollment = int(enrollment_data)
+        enrollment = int(enrollment_data.replace(",", "").strip())
     except:
         enrollment = 999999
 
@@ -831,6 +831,24 @@ def get_all_data(API, file_name, enrollment_filter=40):
         print(f"Completed: {min_rank}-{max_rank}")
 
 
+def check_isAutomatic(time_string):
+    # get current time
+    current_time = datetime.now().time()
+
+    # parse input time string
+    input_time = datetime.strptime(time_string, '%H:%M').time()
+
+    # calculate time difference
+    time_diff = timedelta(hours=input_time.hour, minutes=input_time.minute) - \
+        timedelta(hours=current_time.hour, minutes=current_time.minute)
+
+    # check if time difference is within +/- 5 minutes
+    if abs(time_diff) <= timedelta(minutes=5):
+        return True
+    else:
+        return False
+
+
 def scraper():
     output_file_name = f"{(datetime.now(timezone.utc) - timedelta(hours=8, days=1)).strftime('%Y-%m-%d')}-clinicaltrials-gov_temp.csv"
     # output_file_name = f"2023-04-18-clinicaltrials-gov_temp.csv"
@@ -839,6 +857,7 @@ def scraper():
     reciever_email = "alia6783@gmail.com"
     sender_email = "broadbreada@gmail.com"
     password = "scxmzgfifsurfkgk"
+    run_time = "21:00"
 
     email_validation_api_key = "live_b5be4e7aa50d05d4a67b"
     # email_validation_api_key = "test_ec6969802851c6fefad8"
@@ -852,9 +871,12 @@ def scraper():
     output_file_name_final = post_process(
         output_file_name, email_validation_api_key)
 
-    send_email(output_file_name, reciever_email, sender_email, password)
-
-    update_email_database(file_name=output_file_name_final)
+    # send_email(output_file_name, reciever_email, sender_email, password)
+    if check_isAutomatic(run_time):
+        update_email_database(file_name=output_file_name_final)
+    else:
+        print(f"As the script is running manually, email database is not updating.")
+        pass
 
 
 def main():

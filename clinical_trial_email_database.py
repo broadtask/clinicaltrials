@@ -11,6 +11,16 @@ def read_csv(file_name):
     return rows
 
 
+def convert_date(date_string):
+    # convert date string to date object
+    date_obj = datetime.datetime.strptime(date_string, '%B %d, %Y')
+
+    # format date object as "dd-mm-yyyy"
+    formatted_date = date_obj.strftime('%d-%m-%Y')
+
+    return formatted_date
+
+
 def update_email_database(database_name="email_database.csv", file_name=""):
 
     today = datetime.datetime.now().strftime('%d-%m-%Y')
@@ -30,13 +40,14 @@ def update_email_database(database_name="email_database.csv", file_name=""):
             if each_recent_email.lower().strip() == each_email_on_database[0].lower().strip():
 
                 matched = True
-                email_database_data[indx][2] = today
+                email_database_data[indx][2] = convert_date(
+                    each_recent_email_data[2])
                 count_prev = each_email_on_database[3]
                 email_database_data[indx][3] = int(count_prev)+1
                 break
         if matched == False:
-            data_list = [each_recent_email, today,
-                         today, 1, each_recent_email_data[16]]
+            data_list = [each_recent_email, convert_date(each_recent_email_data[2]),
+                         convert_date(each_recent_email_data[2]), 1, each_recent_email_data[16]]
             email_database_data.append(data_list)
 
         with open(database_name, 'w', newline='', encoding='utf-8') as file:
